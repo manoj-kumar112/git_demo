@@ -9,4 +9,3 @@ RUN apt-get update && apt-get install -y \
 EXPOSE 5432
 
 
-adding something new to the dockerfile
