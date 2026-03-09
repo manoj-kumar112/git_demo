@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  postgres_new:
+    build:
+      context: .
+      network: host
+    container_name: prod-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: jb_prod_admin
+      POSTGRES_PASSWORD: jb_prod
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_standard:/var/lib/postgresql/data
+      - ~/postgres_ssl/server.crt:/etc/postgresql/server.crt:ro
+      - ~/postgres_ssl/server.key:/etc/postgresql/server.key:ro
+    command: >
+      postgres
+        -c ssl=on
+        -c ssl_cert_file=/etc/postgresql/server.crt
+        -c ssl_key_file=/etc/postgresql/server.key
+        -c max_connections=700
+        -c shared_preload_libraries=pgaudit
+        -c wal_level=logical
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c max_worker_processes=20
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jb_prod_admin"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  pgdata_standard:
+
+networks:
+  db:
+    driver: bridge
